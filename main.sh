@@ -215,16 +215,65 @@ EOF
 
 run_gost_menu() {
   local gost_script="./gost.sh"
+  local gost_url="https://raw.githubusercontent.com/pylist/linux-sh/main/gost.sh"
   
   # 检查 gost.sh 是否存在
   if [ ! -f "$gost_script" ]; then
     clear
-    error "未找到 gost.sh 脚本"
+    warn "未找到 gost.sh 脚本"
     echo ""
-    warn "请确保 gost.sh 与 main.sh 在同一目录下"
+    info "是否从 GitHub 下载 gost.sh？"
+    printf "下载地址: %s\n" "$gost_url"
     echo ""
-    read -rp "按回车键返回菜单..." _ </dev/tty
-    return
+    printf "是否下载？[Y/n]: "
+    read -r answer </dev/tty
+    
+    case "${answer,,}" in
+      n|no)
+        info "已取消"
+        echo ""
+        read -rp "按回车键返回菜单..." _ </dev/tty
+        return
+        ;;
+      *)
+        echo ""
+        info "正在下载 gost.sh..."
+        
+        # 尝试使用 curl 或 wget 下载
+        if command -v curl &> /dev/null; then
+          if curl -fsSL "$gost_url" -o "$gost_script"; then
+            chmod +x "$gost_script"
+            info "✓ 下载成功！"
+            sleep 1
+          else
+            error "下载失败，请检查网络连接"
+            echo ""
+            read -rp "按回车键返回菜单..." _ </dev/tty
+            return
+          fi
+        elif command -v wget &> /dev/null; then
+          if wget -q "$gost_url" -O "$gost_script"; then
+            chmod +x "$gost_script"
+            info "✓ 下载成功！"
+            sleep 1
+          else
+            error "下载失败，请检查网络连接"
+            echo ""
+            read -rp "按回车键返回菜单..." _ </dev/tty
+            return
+          fi
+        else
+          error "系统中未找到 curl 或 wget 工具"
+          echo ""
+          warn "请手动下载 gost.sh 或安装 curl/wget："
+          echo "  Ubuntu/Debian: sudo apt-get install curl"
+          echo "  CentOS/RHEL:   sudo yum install curl"
+          echo ""
+          read -rp "按回车键返回菜单..." _ </dev/tty
+          return
+        fi
+        ;;
+    esac
   fi
   
   while true; do
