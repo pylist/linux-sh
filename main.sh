@@ -87,14 +87,14 @@ EOF
   /tmp/bbr.sh
 }
 
-case "${1:-}" in
+case "${1:---menu}" in
   --list|-l)
     print_features
     ;;
   --enable-bbr|-b)
     embed_bbr "$@"
     ;;
-  --menu|-m)
+  --menu|-m|"")
     # 简化交互式菜单：仅列出已实现的功能
     bbr_status(){
       local cur
