@@ -214,7 +214,10 @@ EOF
 # ============================================================================
 
 run_gost_menu() {
-  local gost_script="./gost.sh"
+  # 获取 main.sh 所在的目录
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local gost_script="${script_dir}/gost.sh"
   local gost_url="https://raw.githubusercontent.com/pylist/linux-sh/main/gost.sh"
   
   # 检查 gost.sh 是否存在
@@ -222,6 +225,7 @@ run_gost_menu() {
     clear
     warn "未找到 gost.sh 脚本"
     echo ""
+    info "脚本路径: $gost_script"
     info "是否从 GitHub 下载 gost.sh？"
     printf "下载地址: %s\n" "$gost_url"
     echo ""
