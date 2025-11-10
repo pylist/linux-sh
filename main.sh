@@ -49,6 +49,12 @@ print_features() {
      - 加载内核模块并持久化配置
      - 验证配置是否生效
 
+  2. Gost 代理服务管理
+     - 安装 systemd 服务
+     - 启动/停止/重启服务
+     - 查看状态和日志
+     - 开机自启设置
+
 使用示例:
 
   # 交互式菜单
@@ -59,6 +65,9 @@ print_features() {
 
   # 启用 BBR
   sudo ./main.sh --enable-bbr
+
+  # Gost 服务管理
+  sudo ./main.sh --gost
 
   # 远程执行
   curl -fsSL https://raw.githubusercontent.com/pylist/linux-sh/main/main.sh | sudo bash -s -- --enable-bbr
@@ -74,6 +83,7 @@ print_help() {
 选项:
   --list, -l        列出所有可用功能
   --enable-bbr, -b  启用 TCP BBR 拥塞控制
+  --gost, -g        Gost 代理服务管理
   --menu, -m        显示交互式菜单（默认）
   --help, -h        显示此帮助信息
 
@@ -81,6 +91,7 @@ print_help() {
   $0                      # 显示交互式菜单
   $0 --list               # 列出功能
   sudo $0 --enable-bbr    # 启用 BBR
+  sudo $0 --gost          # Gost 服务管理
   $0 --help               # 显示帮助
 
 远程执行:
@@ -199,6 +210,110 @@ EOF
 }
 
 # ============================================================================
+# Gost 服务管理
+# ============================================================================
+
+run_gost_menu() {
+  local gost_script="./gost.sh"
+  
+  # 检查 gost.sh 是否存在
+  if [ ! -f "$gost_script" ]; then
+    clear
+    error "未找到 gost.sh 脚本"
+    echo ""
+    warn "请确保 gost.sh 与 main.sh 在同一目录下"
+    echo ""
+    read -rp "按回车键返回菜单..." _ </dev/tty
+    return
+  fi
+  
+  while true; do
+    clear
+    cat <<'GOSTMENU'
+╔════════════════════════════════════════════════════════════╗
+║              Gost 代理服务管理菜单                          ║
+╚════════════════════════════════════════════════════════════╝
+
+  1) 安装 systemd 服务
+  2) 启动服务
+  3) 停止服务
+  4) 重启服务
+  5) 查看服务状态
+  6) 查看实时日志
+  7) 设置开机自启
+  8) 禁用开机自启
+  9) 删除服务
+  0) 返回主菜单
+
+╔════════════════════════════════════════════════════════════╝
+GOSTMENU
+    printf "请选择 [0-9]: "
+    read -r choice </dev/tty
+    
+    case "$choice" in
+      1)
+        echo ""
+        sudo "$gost_script" --install
+        read -rp "按回车键继续..." _ </dev/tty
+        ;;
+      2)
+        echo ""
+        sudo "$gost_script" --start
+        echo ""
+        read -rp "按回车键继续..." _ </dev/tty
+        ;;
+      3)
+        echo ""
+        sudo "$gost_script" --stop
+        echo ""
+        read -rp "按回车键继续..." _ </dev/tty
+        ;;
+      4)
+        echo ""
+        sudo "$gost_script" --restart
+        echo ""
+        read -rp "按回车键继续..." _ </dev/tty
+        ;;
+      5)
+        sudo "$gost_script" --status
+        read -rp "按回车键继续..." _ </dev/tty
+        ;;
+      6)
+        echo ""
+        info "按 Ctrl+C 返回菜单"
+        sleep 2
+        sudo "$gost_script" --logs || true
+        ;;
+      7)
+        echo ""
+        sudo "$gost_script" --enable
+        echo ""
+        read -rp "按回车键继续..." _ </dev/tty
+        ;;
+      8)
+        echo ""
+        sudo "$gost_script" --disable
+        echo ""
+        read -rp "按回车键继续..." _ </dev/tty
+        ;;
+      9)
+        echo ""
+        sudo "$gost_script" --remove
+        read -rp "按回车键继续..." _ </dev/tty
+        ;;
+      0)
+        return
+        ;;
+      *)
+        echo ""
+        warn "无效选择: $choice"
+        sleep 1
+        ;;
+    esac
+  done
+}
+
+# ============================================================================
 # 交互式菜单
 # ============================================================================
 
@@ -211,13 +326,14 @@ show_menu() {
 
   1) 启用 BBR 拥塞控制
   2) 检查 BBR 状态
-  3) 列出所有功能
-  4) 显示帮助信息
+  3) Gost 代理服务管理
+  4) 列出所有功能
+  5) 显示帮助信息
   0) 退出
 
 ╔════════════════════════════════════════════════════════════╗
 MENU
-  printf "请选择 [0-4]: "
+  printf "请选择 [0-5]: "
 }
 
 run_interactive_menu() {
@@ -237,10 +353,13 @@ run_interactive_menu() {
         read -rp "按回车键返回菜单..." _ </dev/tty
         ;;
       3)
+        run_gost_menu
+        ;;
+      4)
         print_features
         read -rp "按回车键返回菜单..." _ </dev/tty
         ;;
-      4)
+      5)
         print_help
         read -rp "按回车键返回菜单..." _ </dev/tty
         ;;
@@ -275,6 +394,14 @@ main() {
       ;;
     --enable-bbr|-b)
       embed_bbr
+      ;;
+    --gost|-g)
+      # 检查是否为交互式终端
+      if [ ! -t 0 ]; then
+        error "Gost 管理需要交互式终端"
+        exit 1
+      fi
+      run_gost_menu
       ;;
     --help|-h)
       print_help
