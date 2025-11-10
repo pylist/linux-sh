@@ -9,27 +9,24 @@
 
 ## 🚀 一键运行
 
-### 方式一：交互式菜单（推荐）
+### 交互式菜单
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/pylist/linux-sh/main/main.sh -o main.sh && chmod +x main.sh && ./main.sh
+```
+
+> **说明**：此命令会下载脚本、设置执行权限并启动交互式菜单。
+
+**其他用法：**
+
+```bash
+# 查看功能列表
 curl -fsSL https://raw.githubusercontent.com/pylist/linux-sh/main/main.sh | bash
-```
 
-或使用 wget：
-
-```bash
-wget -qO- https://raw.githubusercontent.com/pylist/linux-sh/main/main.sh | bash
-```
-
-### 方式二：直接启用 BBR
-
-```bash
+# 直接启用 BBR（非交互）
 curl -fsSL https://raw.githubusercontent.com/pylist/linux-sh/main/main.sh | sudo bash -s -- --enable-bbr
-```
 
-或单独使用 BBR 脚本：
-
-```bash
+# 使用独立 BBR 脚本
 curl -fsSL https://raw.githubusercontent.com/pylist/linux-sh/main/bbr.sh | sudo bash
 ```
 
